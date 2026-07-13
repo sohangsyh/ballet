@@ -653,7 +653,8 @@
       let camPose = null, refPose = null;
       let smoothedSimilarity = 0;
       let running = false;
-      let started = false; // true once the hold button has been activated (tracking begins)
+      let started = false; // true once the countdown finishes and tracking begins
+      let activating = false; // true from the moment the hold completes until started flips
       let holdStartTime = null;
 
       function resizeCanvas(canvas, videoBox) {
@@ -787,6 +788,9 @@
       // clip from the top (it was already autoplaying/looping) so the user
       // gets a clean, synced run to match against, and turns on tracking.
       function activateTracking() {
+        if (activating || started) return; // guard against re-entry — see detectTick note below
+        activating = true;
+
         holdBtn.classList.add('is-active');
         holdBtn.disabled = true;
         holdBtnInner.textContent = 'Active';
@@ -812,6 +816,28 @@
           }
         };
         setTimeout(tick, 1000);
+      }
+
+      // Linearly interpolates two poses' matching keypoints by t (0..1), so
+      // the skeleton can be redrawn every animation frame even though a new
+      // detection only arrives every DETECT_INTERVAL_MS — this is what
+      // makes the overlay glide smoothly instead of visibly stepping.
+      function lerpPose(from, to, t) {
+        if (!to) return null;
+        if (!from) return to;
+        const fromKp = {};
+        from.keypoints.forEach((k) => { fromKp[k.name] = k; });
+        const keypoints = to.keypoints.map((k) => {
+          const f = fromKp[k.name];
+          if (!f) return k;
+          return {
+            name: k.name,
+            score: f.score + (k.score - f.score) * t,
+            x: f.x + (k.x - f.x) * t,
+            y: f.y + (k.y - f.y) * t,
+          };
+        });
+        return { keypoints };
       }
 
       function drawSkeleton(ctx, pose, canvas, videoEl, color) {
@@ -860,6 +886,27 @@
       const REF_POSE_FAIL_HINT_THRESHOLD = 14; // ~3s of consecutive failures at the slower tick rate
       const DETECT_INTERVAL_MS = 220; // lighter main-thread load so video playback doesn't stutter
 
+      // Transition state for the smoothed (interpolated) skeleton drawing —
+      // see renderLoop(). "From/To/T0/Dur" describe the animation between
+      // the last two detections; the raw camPose/refPose above stay as the
+      // most current detection for matching/gesture logic, unaffected by
+      // the smoothing done purely for the on-screen drawing.
+      let camAnimFrom = null, camAnimTo = null, camAnimT0 = 0, camAnimDur = DETECT_INTERVAL_MS;
+      let refAnimFrom = null, refAnimTo = null, refAnimT0 = 0, refAnimDur = DETECT_INTERVAL_MS * 2;
+
+      function renderLoop() {
+        if (!running) return;
+        const now = performance.now();
+
+        const camT = camAnimDur > 0 ? Math.min((now - camAnimT0) / camAnimDur, 1) : 1;
+        drawSkeleton(camCtx, lerpPose(camAnimFrom, camAnimTo, camT), camCanvas, camVideo, '#d9a441');
+
+        const refT = refAnimDur > 0 ? Math.min((now - refAnimT0) / refAnimDur, 1) : 1;
+        drawSkeleton(refCtx, lerpPose(refAnimFrom, refAnimTo, refT), refCanvas, refVideo, '#d9a441');
+
+        requestAnimationFrame(renderLoop);
+      }
+
       async function detectTick() {
         if (!running) return;
 
@@ -869,19 +916,31 @@
           if (camVideo.readyState >= 2) {
             const poses = await detector.estimatePoses(camVideo);
             camPose = poses[0] || null;
+            if (camPose) {
+              camAnimFrom = lerpPose(camAnimFrom, camAnimTo, Math.min((performance.now() - camAnimT0) / camAnimDur, 1)) || camAnimTo;
+              camAnimTo = camPose;
+              camAnimT0 = performance.now();
+            }
           }
         } catch (e) { /* transient frame errors are fine to skip */ }
 
         // Estimate the reference pose every other tick instead of every
         // tick. It's one less heavy WebGL readback competing with the
         // reference video's own decode/paint each cycle, which is what was
-        // showing up as visible playback lag.
+        // showing up as visible playback lag. The render loop below still
+        // redraws every animation frame, interpolating toward this slower
+        // stream of detections so the overlay itself stays smooth.
         if (tickCount % 2 === 0) {
           try {
             if (refVideo.readyState >= 2) {
               const poses = await detector.estimatePoses(refVideo);
               refPose = poses[0] || null;
               refPoseFailStreak = 0;
+              if (refPose) {
+                refAnimFrom = lerpPose(refAnimFrom, refAnimTo, Math.min((performance.now() - refAnimT0) / refAnimDur, 1)) || refAnimTo;
+                refAnimTo = refPose;
+                refAnimT0 = performance.now();
+              }
             }
           } catch (e) {
             // Chrome can block canvas/WebGL frame-reads on a video loaded via
@@ -893,19 +952,18 @@
           }
         }
 
-        drawSkeleton(camCtx, camPose, camCanvas, camVideo, '#d9a441');
-        drawSkeleton(refCtx, refPose, refCanvas, refVideo, '#d9a441');
-
         if (refPoseBlocked) {
           setStatus(null, 'Reference video can’t be analyzed here — serve this folder over http:// (not file://) for full tracking');
           setTimeout(detectTick, DETECT_INTERVAL_MS);
           return;
         }
 
-        if (!started) {
+        if (!started && !activating) {
           // Before activation: track whether a hand is resting on the
           // hold-to-activate button, and advance the hold timer. The
-          // reference video keeps autoplaying regardless.
+          // reference video keeps autoplaying regardless. Once activating
+          // flips true (countdown running), this block is skipped entirely
+          // so the countdown can't be re-triggered on top of itself.
           const handPts = getHandPoints(camPose, camCanvas, camVideo);
           const touching = handPts.some(isPointOnHoldButton);
           if (touching) {
@@ -919,6 +977,8 @@
           }
           scoreValueEl.textContent = '--%';
           setStatus(null, 'Hold the button on your camera for 3s to activate tracking');
+        } else if (!started) {
+          // Countdown in progress — leave status/score alone, just wait.
         } else {
           const vecA = normalizePose(camPose);
           const vecB = normalizePose(refPose);
@@ -982,6 +1042,7 @@
         enableBtn.hidden = true;
         running = true;
         detectTick();
+        requestAnimationFrame(renderLoop);
       }
 
       enableBtn.addEventListener('click', start);
