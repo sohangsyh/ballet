@@ -428,43 +428,64 @@
 
   .tutor__enable[hidden] { display: none; }
 
-  /* Pose selector row: six square buttons under the two windows. A is the
-     default/current pose; B–F are additional poses to practice. Selecting
-     one jumps the reference clip to that pose's segment of the footage. */
+  /* Pose selector row: six square buttons under the two windows, one per
+     reference clip (A = ballet.mp4, B/C/D = dance1–3.mp4, E/F reserved).
+     The row's width is pinned via JS (syncPosesWidth) to exactly match the
+     combined span of the two video windows above, centered the same way,
+     so it lines up with — and never runs wider than — that boundary. Each
+     button is background-image-ready for a video-frame thumbnail; its
+     letter sits underneath as its own label, not overlaid on the image. */
   .tutor__poses {
-    margin-top: 36px;
+    margin: 36px auto 0;
     display: flex;
     justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .tutor__pose {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
   }
 
   .tutor__pose-btn {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
     border: 1px solid rgba(246,242,238,0.25);
-    background: rgba(246,242,238,0.05);
-    color: var(--ink);
-    font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 1.2rem;
+    background-color: rgba(246,242,238,0.05);
+    background-size: cover;
+    background-position: center;
     cursor: pointer;
-    transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s ease;
+    overflow: hidden;
+    transition: background-color 0.25s ease, border-color 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
   }
 
   .tutor__pose-btn:hover {
     border-color: var(--accent);
-    background: rgba(217,164,65,0.12);
     transform: translateY(-2px);
   }
 
   .tutor__pose-btn.is-selected {
     border-color: var(--accent);
-    background: var(--accent);
-    color: #1a1408;
-    font-weight: 700;
-    box-shadow: 0 0 24px rgba(217,164,65,0.4);
+    box-shadow: 0 0 0 2px rgba(217,164,65,0.35), 0 0 24px rgba(217,164,65,0.4);
   }
+
+  .tutor__pose-label {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: clamp(0.9rem, 1.6vw, 1.15rem);
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
+    transition: color 0.25s ease;
+  }
+
+  .tutor__pose-btn.is-selected + .tutor__pose-label { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -504,7 +525,7 @@
       and red below it.
     </p>
 
-    <div class="tutor__stage">
+    <div class="tutor__stage" id="tutorStage">
       <div class="tutor__col">
         <div class="tutor__window" id="camWindow">
           <div class="tutor__mirror">
@@ -537,12 +558,30 @@
     </div>
 
     <div class="tutor__poses" id="tutorPoses">
-      <button class="tutor__pose-btn is-selected" type="button" data-pose="A">A</button>
-      <button class="tutor__pose-btn" type="button" data-pose="B">B</button>
-      <button class="tutor__pose-btn" type="button" data-pose="C">C</button>
-      <button class="tutor__pose-btn" type="button" data-pose="D">D</button>
-      <button class="tutor__pose-btn" type="button" data-pose="E">E</button>
-      <button class="tutor__pose-btn" type="button" data-pose="F">F</button>
+      <div class="tutor__pose">
+        <button class="tutor__pose-btn is-selected" type="button" data-pose="A"></button>
+        <span class="tutor__pose-label">A</span>
+      </div>
+      <div class="tutor__pose">
+        <button class="tutor__pose-btn" type="button" data-pose="B"></button>
+        <span class="tutor__pose-label">B</span>
+      </div>
+      <div class="tutor__pose">
+        <button class="tutor__pose-btn" type="button" data-pose="C"></button>
+        <span class="tutor__pose-label">C</span>
+      </div>
+      <div class="tutor__pose">
+        <button class="tutor__pose-btn" type="button" data-pose="D"></button>
+        <span class="tutor__pose-label">D</span>
+      </div>
+      <div class="tutor__pose">
+        <button class="tutor__pose-btn" type="button" data-pose="E"></button>
+        <span class="tutor__pose-label">E</span>
+      </div>
+      <div class="tutor__pose">
+        <button class="tutor__pose-btn" type="button" data-pose="F"></button>
+        <span class="tutor__pose-label">F</span>
+      </div>
     </div>
 
     <div class="tutor__status" id="tutorStatus">
@@ -673,6 +712,22 @@
       }
       resizeAllCanvases();
       window.addEventListener('resize', resizeAllCanvases);
+
+      // A window-resize listener alone misses layout shifts that aren't
+      // triggered by resizing the browser (fonts loading late, flex sizing
+      // settling after the camera stream attaches, etc.). If the canvas's
+      // backing resolution ever drifts even slightly from its rendered CSS
+      // box, every mapped keypoint is off by that same drift — which reads
+      // exactly like "the skeleton is in the wrong place." ResizeObserver
+      // catches all of that, not just window resizes.
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          resizeCanvas(camCanvas, camWindow);
+          resizeCanvas(refCanvas, refWindow);
+        });
+        ro.observe(camWindow);
+        ro.observe(refWindow);
+      }
 
       // Only the left (camera) window and the percentage readout are
       // color-coded — the reference window on the right always stays neutral,
@@ -883,16 +938,22 @@
       let refPoseFailStreak = 0;
       let refPoseBlocked = false;
       let tickCount = 0;
-      const REF_POSE_FAIL_HINT_THRESHOLD = 14; // ~3s of consecutive failures at the slower tick rate
-      const DETECT_INTERVAL_MS = 220; // lighter main-thread load so video playback doesn't stutter
+      const REF_POSE_FAIL_HINT_THRESHOLD = 20; // ~3s of consecutive failures at the tick rate below
+      const DETECT_INTERVAL_MS = 120; // both feeds detected every tick — canvas resize was the real
+                                       // source of the earlier video jank, not detection frequency,
+                                       // so both cam and ref now track at the same, faster cadence
 
       // Transition state for the smoothed (interpolated) skeleton drawing —
       // see renderLoop(). "From/To/T0/Dur" describe the animation between
       // the last two detections; the raw camPose/refPose above stay as the
       // most current detection for matching/gesture logic, unaffected by
-      // the smoothing done purely for the on-screen drawing.
-      let camAnimFrom = null, camAnimTo = null, camAnimT0 = 0, camAnimDur = DETECT_INTERVAL_MS;
-      let refAnimFrom = null, refAnimTo = null, refAnimT0 = 0, refAnimDur = DETECT_INTERVAL_MS * 2;
+      // the smoothing done purely for the on-screen drawing. The anim
+      // duration is shorter than the detection interval on purpose: the
+      // display catches up to the real, current pose well before the next
+      // detection lands, instead of always trailing a full interval behind.
+      const ANIM_DUR_MS = DETECT_INTERVAL_MS * 0.6;
+      let camAnimFrom = null, camAnimTo = null, camAnimT0 = 0, camAnimDur = ANIM_DUR_MS;
+      let refAnimFrom = null, refAnimTo = null, refAnimT0 = 0, refAnimDur = ANIM_DUR_MS;
 
       function renderLoop() {
         if (!running) return;
@@ -924,13 +985,10 @@
           }
         } catch (e) { /* transient frame errors are fine to skip */ }
 
-        // Estimate the reference pose every other tick instead of every
-        // tick. It's one less heavy WebGL readback competing with the
-        // reference video's own decode/paint each cycle, which is what was
-        // showing up as visible playback lag. The render loop below still
-        // redraws every animation frame, interpolating toward this slower
-        // stream of detections so the overlay itself stays smooth.
-        if (tickCount % 2 === 0) {
+        // Estimate the reference pose every tick too, same as the camera —
+        // keeping both feeds on the same cadence is what actually keeps the
+        // overlay from visibly trailing the dancer.
+        {
           try {
             if (refVideo.readyState >= 2) {
               const poses = await detector.estimatePoses(refVideo);
@@ -1047,19 +1105,96 @@
 
       enableBtn.addEventListener('click', start);
 
-      // Pose selector row: A/B/C/D/E/F split the reference clip into six
-      // equal segments. Picking one highlights that button and jumps the
-      // reference video to the start of that segment to practice it.
+      // Pose selector row: each button swaps the reference clip entirely.
+      // E and F have no clip assigned yet — add them here once those files
+      // exist (e.g. 'assets/dance4.mp4') and a thumbnail + video swap will
+      // work automatically, same as A–D.
+      const POSE_VIDEOS = {
+        A: 'assets/ballet.mp4',
+        B: 'assets/dance1.mp4',
+        C: 'assets/dance2.mp4',
+        D: 'assets/dance3.mp4',
+      };
+
+      const tutorStage = document.getElementById('tutorStage');
+      const tutorPoses = document.getElementById('tutorPoses');
+
+      // Keeps the pose-button row exactly as wide as the two video windows
+      // above it (never wider), per the design requirement.
+      function syncPosesWidth() {
+        const w = tutorStage.getBoundingClientRect().width;
+        if (w > 0) tutorPoses.style.maxWidth = `${Math.round(w)}px`;
+      }
+      syncPosesWidth();
+      window.addEventListener('resize', syncPosesWidth);
+      window.addEventListener('load', syncPosesWidth);
+
+      // Grabs a frame of a video file and sets it as a button's
+      // background-image, so each square previews its clip. Uses a hidden,
+      // throwaway <video> + <canvas> — never touches the visible players.
+      // seekFraction picks which frame: near 0 = first frame (default),
+      // 0.5 = the middle of the clip (used for C).
+      function setPoseThumbnail(btn, src, seekFraction = 0) {
+        const v = document.createElement('video');
+        v.src = src;
+        v.muted = true;
+        v.playsInline = true;
+        v.preload = 'auto';
+        v.addEventListener('loadeddata', () => {
+          try {
+            const duration = v.duration || 1;
+            // A tiny seek off 0 avoids an all-black first frame in some codecs.
+            const target = seekFraction > 0 ? duration * seekFraction : Math.min(0.05, duration / 2);
+            v.currentTime = target;
+          } catch (e) {}
+        });
+        v.addEventListener('seeked', capture, { once: true });
+        v.addEventListener('loadeddata', function once() {
+          // Some browsers never fire 'seeked' for a no-op seek at time 0 —
+          // fall back to capturing right after data is available.
+          setTimeout(capture, 50);
+        }, { once: true });
+
+        let captured = false;
+        function capture() {
+          if (captured || !v.videoWidth) return;
+          captured = true;
+          const canvas = document.createElement('canvas');
+          canvas.width = v.videoWidth;
+          canvas.height = v.videoHeight;
+          const ctx = canvas.getContext('2d');
+          try {
+            ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+            btn.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg', 0.85)})`;
+          } catch (e) {
+            // Canvas can be tainted reading a file:// video in some browsers
+            // (same limitation noted for the reference-video pose tracking).
+            // The button just keeps its plain background in that case.
+          }
+        }
+
+        v.addEventListener('error', () => {
+          // Clip not uploaded yet (e.g. dance1/2/3.mp4) — leave the button
+          // as a plain square with its letter, no thumbnail.
+        });
+      }
+
       const poseButtons = Array.from(document.querySelectorAll('.tutor__pose-btn'));
-      poseButtons.forEach((btn, i) => {
+      poseButtons.forEach((btn) => {
+        const pose = btn.dataset.pose;
+        const src = POSE_VIDEOS[pose];
+        if (src) setPoseThumbnail(btn, src, pose === 'C' ? 0.5 : 0);
+
         btn.addEventListener('click', () => {
           poseButtons.forEach((b) => b.classList.remove('is-selected'));
           btn.classList.add('is-selected');
-          const duration = refVideo.duration;
-          if (duration && isFinite(duration)) {
-            refVideo.currentTime = (duration / poseButtons.length) * i;
-            forcePlay(refVideo);
+          if (!src) return; // no clip assigned to this pose yet
+          if (refVideo.getAttribute('src') !== src) {
+            refVideo.setAttribute('src', src);
+            refVideo.load();
           }
+          refVideo.currentTime = 0;
+          forcePlay(refVideo);
         });
       });
     })();
