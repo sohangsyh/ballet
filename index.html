@@ -695,11 +695,19 @@
       let started = false; // true once the countdown finishes and tracking begins
       let activating = false; // true from the moment the hold completes until started flips
       let holdStartTime = null;
+      let lastTouchTime = null;
+      const HOLD_GRACE_MS = 450; // tolerate brief detection dropouts without resetting the hold
 
       function resizeCanvas(canvas, videoBox) {
-        const rect = videoBox.getBoundingClientRect();
-        canvas.width = Math.round(rect.width);
-        canvas.height = Math.round(rect.height);
+        // The canvas is an inset:0 child inside videoBox's border, so it
+        // actually renders at videoBox's *content* box, not its border box.
+        // getBoundingClientRect() includes the 3px border on each side —
+        // using that made the canvas's internal resolution ~6px too big in
+        // both dimensions, which subtly skews every mapped keypoint away
+        // from the true position (worse toward the edges of the frame).
+        // clientWidth/clientHeight exclude the border and match exactly.
+        canvas.width = videoBox.clientWidth;
+        canvas.height = videoBox.clientHeight;
       }
 
       // Resizing forces a layout read + canvas reset, which is wasted work
@@ -1024,13 +1032,28 @@
           // so the countdown can't be re-triggered on top of itself.
           const handPts = getHandPoints(camPose, camCanvas, camVideo);
           const touching = handPts.some(isPointOnHoldButton);
+          const now = Date.now();
+
           if (touching) {
-            if (holdStartTime === null) holdStartTime = Date.now();
-            const pct = Math.min((Date.now() - holdStartTime) / HOLD_DURATION_MS, 1);
+            lastTouchTime = now;
+            if (holdStartTime === null) holdStartTime = now;
+          }
+
+          // A single missed detection (blur, brief occlusion, low-confidence
+          // frame) used to zero the whole hold out instantly, which is what
+          // made activation feel flaky — it needed a perfectly unbroken 3s
+          // detection streak. Now a short gap since the last confirmed touch
+          // is tolerated and the timer keeps running through it; only a
+          // longer gap (HOLD_GRACE_MS) actually resets the hold.
+          const withinGrace = lastTouchTime !== null && (now - lastTouchTime) < HOLD_GRACE_MS;
+
+          if (holdStartTime !== null && (touching || withinGrace)) {
+            const pct = Math.min((now - holdStartTime) / HOLD_DURATION_MS, 1);
             updateHoldProgress(pct);
             if (pct >= 1) activateTracking();
           } else {
             holdStartTime = null;
+            lastTouchTime = null;
             updateHoldProgress(0);
           }
           scoreValueEl.textContent = '--%';
@@ -1106,14 +1129,13 @@
       enableBtn.addEventListener('click', start);
 
       // Pose selector row: each button swaps the reference clip entirely.
-      // E and F have no clip assigned yet — add them here once those files
-      // exist (e.g. 'assets/dance4.mp4') and a thumbnail + video swap will
-      // work automatically, same as A–D.
       const POSE_VIDEOS = {
         A: 'assets/ballet.mp4',
         B: 'assets/dance1.mp4',
         C: 'assets/dance2.mp4',
         D: 'assets/dance3.mp4',
+        E: 'assets/ballet4.mp4',
+        F: 'assets/ballet5.mp4',
       };
 
       const tutorStage = document.getElementById('tutorStage');
