@@ -142,14 +142,13 @@
     transform: translateY(-2px);
   }
 
-  /* ---------- NEXT SECTION (context so the scroll transition reads) ---------- */
+  /* ---------- UPLOAD / "THE PLATFORM" ---------- */
   .section {
     position: relative;
-    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 120px 24px;
+    padding: 90px 24px;
     background: var(--bg);
     text-align: center;
   }
@@ -178,10 +177,50 @@
     font-size: 1.02rem;
   }
 
+  .upload__drop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 32px auto 0;
+    max-width: 420px;
+    padding: 40px 24px;
+    border: 1.5px dashed rgba(246,242,238,0.3);
+    border-radius: 18px;
+    cursor: pointer;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .upload__drop:hover,
+  .upload__drop.is-dragover {
+    border-color: var(--accent);
+    background: rgba(217,164,65,0.08);
+  }
+
+  .upload__drop-icon {
+    font-size: 2rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .upload__drop-text {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  .upload__status {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    min-height: 1em;
+  }
+
   /* ---------- TUTOR ---------- */
   .tutor {
     position: relative;
-    padding: 140px 24px 160px;
+    padding: 140px 24px 80px;
     background: var(--bg);
     text-align: center;
   }
@@ -486,6 +525,229 @@
   }
 
   .tutor__pose-btn.is-selected + .tutor__pose-label { color: var(--accent); }
+
+  /* ---------- CALENDAR ---------- */
+  .calendar {
+    position: relative;
+    padding: 120px 24px 160px;
+    background: var(--bg);
+    text-align: center;
+  }
+
+  .calendar__kicker {
+    font-size: 12px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 18px;
+  }
+
+  .calendar h2 {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 400;
+    font-size: clamp(1.8rem, 3.6vw, 2.8rem);
+    margin-bottom: 16px;
+  }
+
+  .calendar__lede {
+    max-width: 52ch;
+    margin: 0 auto 48px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.75;
+    font-size: 1.02rem;
+  }
+
+  .calendar__panel {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    text-align: left;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .calendar__grid-wrap {
+    flex: 1 1 640px;
+    max-width: 780px;
+    background: rgba(246,242,238,0.03);
+    border: 1px solid rgba(246,242,238,0.12);
+    border-radius: 20px;
+    padding: 24px;
+  }
+
+  .calendar__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+
+  .calendar__nav-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(246,242,238,0.25);
+    background: transparent;
+    color: var(--ink);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .calendar__nav-btn:hover {
+    border-color: var(--accent);
+    background: rgba(217,164,65,0.12);
+  }
+
+  .calendar__month-label {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.15rem;
+    letter-spacing: 0.02em;
+  }
+
+  .calendar__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .calendar__days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .calendar__day {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    border-radius: 10px;
+    background: rgba(246,242,238,0.03);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  .calendar__day--empty { background: none; }
+
+  .calendar__day.is-today {
+    border: 1px solid var(--accent);
+  }
+
+  .calendar__day-num {
+    font-size: 12px;
+    color: var(--muted);
+    align-self: flex-start;
+  }
+
+  .calendar__day.has-check .calendar__day-num { color: var(--ink); }
+
+  .calendar__badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    gap: 3px;
+    max-width: 100%;
+    flex: 1;
+  }
+
+  .calendar__badge {
+    font-size: 10px;
+    line-height: 1;
+    color: #06120c;
+    background: #45c98a;
+    border-radius: 4px;
+    padding: 2px 3px;
+    font-weight: 700;
+  }
+
+  .calendar__filters {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-top: 8px;
+  }
+
+  .calendar__filters-label {
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  /* "All" stays a plain text pill — it's an aggregate option, not a pose. */
+  .calendar__filter-btn--all {
+    width: 100%;
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(246,242,238,0.25);
+    background: rgba(246,242,238,0.05);
+    color: var(--ink);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.25s ease, border-color 0.25s ease;
+  }
+
+  .calendar__filter-btn--all:hover {
+    border-color: var(--accent);
+    background: rgba(217,164,65,0.12);
+  }
+
+  .calendar__filter-btn--all.is-selected {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #1a1408;
+    font-weight: 700;
+  }
+
+  /* A–G filters mirror the Live Practice pose buttons — same thumbnail,
+     shown mini, so it's obvious which pose each filter corresponds to. */
+  .calendar__filter-pose {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .calendar__filter-thumb {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    border: 1px solid rgba(246,242,238,0.25);
+    background-color: rgba(246,242,238,0.05);
+    background-size: cover;
+    background-position: center;
+    cursor: pointer;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .calendar__filter-thumb:hover { border-color: var(--accent); }
+
+  .calendar__filter-thumb.is-selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(217,164,65,0.35), 0 0 16px rgba(217,164,65,0.4);
+  }
+
+  .calendar__filter-letter {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 13px;
+    color: var(--muted);
+  }
 </style>
 </head>
 <body>
@@ -595,10 +857,68 @@
       <div class="section__kicker">The Platform</div>
       <h2>Trained eyes, at any hour.</h2>
       <p>
-        Upload a rehearsal clip and receive frame-by-frame feedback on alignment,
-        extension, and timing — the kind of guidance you'd expect from a studio mirror
-        and a mentor standing beside it.
+        Upload a rehearsal clip and it becomes its own pose in Live Practice above —
+        added right after F — with your camera matched against it in the right-hand window.
       </p>
+
+      <label class="upload__drop" id="uploadDrop" for="uploadInput">
+        <input type="file" id="uploadInput" accept="video/*" hidden />
+        <span class="upload__drop-icon">+</span>
+        <span class="upload__drop-text">Click or drag a video file here</span>
+      </label>
+      <p class="upload__status" id="uploadStatus"></p>
+    </div>
+  </section>
+
+  <section class="calendar" id="calendarSection">
+    <div class="calendar__kicker">Your Progress</div>
+    <h2>Practice Calendar</h2>
+    <p class="calendar__lede">
+      Every time you sync with a pose, it's checked off here — right on the day you did it.
+      View everything at once, or filter to a single pose on the right.
+    </p>
+
+    <div class="calendar__panel">
+      <div class="calendar__grid-wrap">
+        <div class="calendar__nav">
+          <button class="calendar__nav-btn" id="calPrev" type="button" aria-label="Previous month">‹</button>
+          <span class="calendar__month-label" id="calMonthLabel"></span>
+          <button class="calendar__nav-btn" id="calNext" type="button" aria-label="Next month">›</button>
+        </div>
+        <div class="calendar__weekdays">
+          <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+        </div>
+        <div class="calendar__days" id="calendarDays"></div>
+      </div>
+
+      <div class="calendar__filters" id="calendarFilters">
+        <span class="calendar__filters-label">Show</span>
+        <button class="calendar__filter-btn--all is-selected" type="button" data-filter="ALL">All</button>
+        <div class="calendar__filter-pose">
+          <button class="calendar__filter-thumb" type="button" data-filter="A"></button>
+          <span class="calendar__filter-letter">A</span>
+        </div>
+        <div class="calendar__filter-pose">
+          <button class="calendar__filter-thumb" type="button" data-filter="B"></button>
+          <span class="calendar__filter-letter">B</span>
+        </div>
+        <div class="calendar__filter-pose">
+          <button class="calendar__filter-thumb" type="button" data-filter="C"></button>
+          <span class="calendar__filter-letter">C</span>
+        </div>
+        <div class="calendar__filter-pose">
+          <button class="calendar__filter-thumb" type="button" data-filter="D"></button>
+          <span class="calendar__filter-letter">D</span>
+        </div>
+        <div class="calendar__filter-pose">
+          <button class="calendar__filter-thumb" type="button" data-filter="E"></button>
+          <span class="calendar__filter-letter">E</span>
+        </div>
+        <div class="calendar__filter-pose">
+          <button class="calendar__filter-thumb" type="button" data-filter="F"></button>
+          <span class="calendar__filter-letter">F</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -694,6 +1014,7 @@
       let running = false;
       let started = false; // true once the countdown finishes and tracking begins
       let activating = false; // true from the moment the hold completes until started flips
+      let currentPoseLetter = 'A'; // which pose button is selected — drives calendar check-offs
       let holdStartTime = null;
       let lastTouchTime = null;
       const HOLD_GRACE_MS = 450; // tolerate brief detection dropouts without resetting the hold
@@ -1078,6 +1399,7 @@
             setStatus(null, 'Reading the reference movement…');
           } else if (smoothedSimilarity >= SYNC_THRESHOLD) {
             setStatus('is-sync', 'In sync — beautiful, keep going');
+            markPoseComplete(currentPoseLetter);
           } else {
             setStatus('is-async', 'Out of sync — match the reference movement');
           }
@@ -1187,7 +1509,14 @@
           const ctx = canvas.getContext('2d');
           try {
             ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-            btn.style.backgroundImage = `url(${canvas.toDataURL('image/jpeg', 0.85)})`;
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            btn.style.backgroundImage = `url(${dataUrl})`;
+            // Keep the calendar's mini filter thumbnail in sync with the
+            // Live Practice button — same image, smaller size.
+            const pose = btn.dataset.pose;
+            poseThumbnails[pose] = dataUrl;
+            const filterThumb = document.querySelector(`.calendar__filter-thumb[data-filter="${pose}"]`);
+            if (filterThumb) filterThumb.style.backgroundImage = `url(${dataUrl})`;
           } catch (e) {
             // Canvas can be tainted reading a file:// video in some browsers
             // (same limitation noted for the reference-video pose tracking).
@@ -1201,15 +1530,20 @@
         });
       }
 
-      const poseButtons = Array.from(document.querySelectorAll('.tutor__pose-btn'));
-      poseButtons.forEach((btn) => {
-        const pose = btn.dataset.pose;
-        const src = POSE_VIDEOS[pose];
-        if (src) setPoseThumbnail(btn, src, pose === 'C' ? 0.5 : 0);
+      const poseThumbnails = {}; // pose letter -> data URL, shared with the calendar filter thumbs
+      let poseButtons = [];
+
+      // Wires up one pose button (works for the original A–F buttons and
+      // for the dynamically-added upload button alike).
+      function wirePoseButton(btn, pose, src, seekFraction = 0) {
+        POSE_VIDEOS[pose] = src;
+        poseButtons.push(btn);
+        if (src) setPoseThumbnail(btn, src, seekFraction);
 
         btn.addEventListener('click', () => {
           poseButtons.forEach((b) => b.classList.remove('is-selected'));
           btn.classList.add('is-selected');
+          currentPoseLetter = pose;
           if (!src) return; // no clip assigned to this pose yet
           if (refVideo.getAttribute('src') !== src) {
             refVideo.setAttribute('src', src);
@@ -1218,7 +1552,249 @@
           refVideo.currentTime = 0;
           forcePlay(refVideo);
         });
+      }
+
+      Array.from(document.querySelectorAll('.tutor__pose-btn')).forEach((btn) => {
+        const pose = btn.dataset.pose;
+        wirePoseButton(btn, pose, POSE_VIDEOS[pose], pose === 'C' ? 0.5 : 0);
       });
+
+      // ---------- UPLOAD ("The Platform" section) ----------
+      // Adds the uploaded clip as a brand-new pose button (G) right after F
+      // in Live Practice, plus a matching mini filter thumb in the calendar.
+      // Re-uploading replaces G's clip rather than adding another letter.
+      const uploadDrop = document.getElementById('uploadDrop');
+      const uploadInput = document.getElementById('uploadInput');
+      const uploadStatus = document.getElementById('uploadStatus');
+      let uploadedObjectUrl = null;
+
+      function handleUploadedFile(file) {
+        if (!file || !file.type.startsWith('video/')) {
+          uploadStatus.textContent = 'Please choose a video file.';
+          return;
+        }
+
+        if (uploadedObjectUrl) URL.revokeObjectURL(uploadedObjectUrl);
+        uploadedObjectUrl = URL.createObjectURL(file);
+        uploadStatus.textContent = `"${file.name}" added as pose G — switching Live Practice to it now.`;
+
+        let gPoseWrap = document.querySelector('.tutor__pose[data-pose-wrap="G"]');
+        let gBtn, gFilterThumb;
+
+        if (gPoseWrap) {
+          // Re-upload: reuse the existing G button/thumb instead of duplicating.
+          gBtn = gPoseWrap.querySelector('.tutor__pose-btn');
+          gFilterThumb = document.querySelector('.calendar__filter-thumb[data-filter="G"]');
+        } else {
+          gPoseWrap = document.createElement('div');
+          gPoseWrap.className = 'tutor__pose';
+          gPoseWrap.dataset.poseWrap = 'G';
+          gBtn = document.createElement('button');
+          gBtn.className = 'tutor__pose-btn';
+          gBtn.type = 'button';
+          gBtn.dataset.pose = 'G';
+          const gLabel = document.createElement('span');
+          gLabel.className = 'tutor__pose-label';
+          gLabel.textContent = 'G';
+          gPoseWrap.appendChild(gBtn);
+          gPoseWrap.appendChild(gLabel);
+          tutorPoses.appendChild(gPoseWrap);
+          syncPosesWidth();
+
+          const gFilterWrap = document.createElement('div');
+          gFilterWrap.className = 'calendar__filter-pose';
+          gFilterThumb = document.createElement('button');
+          gFilterThumb.className = 'calendar__filter-thumb';
+          gFilterThumb.type = 'button';
+          gFilterThumb.dataset.filter = 'G';
+          const gFilterLetter = document.createElement('span');
+          gFilterLetter.className = 'calendar__filter-letter';
+          gFilterLetter.textContent = 'G';
+          gFilterWrap.appendChild(gFilterThumb);
+          gFilterWrap.appendChild(gFilterLetter);
+          document.getElementById('calendarFilters').appendChild(gFilterWrap);
+          wireFilterButton(gFilterThumb);
+
+          wirePoseButton(gBtn, 'G', uploadedObjectUrl, 0);
+        }
+
+        POSE_VIDEOS.G = uploadedObjectUrl;
+        setPoseThumbnail(gBtn, uploadedObjectUrl, 0);
+        if (gFilterThumb && poseThumbnails.G) {
+          gFilterThumb.style.backgroundImage = `url(${poseThumbnails.G})`;
+        }
+
+        gBtn.click(); // auto-select the freshly uploaded pose
+      }
+
+      uploadInput.addEventListener('change', () => {
+        if (uploadInput.files && uploadInput.files[0]) handleUploadedFile(uploadInput.files[0]);
+      });
+
+      ['dragover', 'dragenter'].forEach((evt) => {
+        uploadDrop.addEventListener(evt, (e) => {
+          e.preventDefault();
+          uploadDrop.classList.add('is-dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach((evt) => {
+        uploadDrop.addEventListener(evt, () => uploadDrop.classList.remove('is-dragover'));
+      });
+      uploadDrop.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) handleUploadedFile(file);
+      });
+
+      // ---------- CALENDAR ----------
+      // Every time a pose is synced (>= SYNC_THRESHOLD, see markPoseComplete
+      // above), it's recorded here by real calendar date + pose letter and
+      // persisted in localStorage so it survives reloads. "All" shows every
+      // checked-off pose on a given day at once; selecting a single letter
+      // filters the grid down to just that pose's completions.
+      const PROGRESS_KEY = 'balletProgress';
+      const markedThisSession = {}; // avoids hammering localStorage every tick while in sync
+
+      function loadProgress() {
+        try {
+          return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function saveProgress(data) {
+        try {
+          localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
+        } catch (e) { /* storage unavailable — progress just won't persist */ }
+      }
+
+      function dateKey(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
+      function markPoseComplete(pose) {
+        if (markedThisSession[pose]) return;
+        markedThisSession[pose] = true;
+        const key = dateKey(new Date());
+        const data = loadProgress();
+        if (!data[key]) data[key] = [];
+        if (!data[key].includes(pose)) {
+          data[key].push(pose);
+          saveProgress(data);
+        }
+        renderCalendar();
+      }
+
+      const calMonthLabel = document.getElementById('calMonthLabel');
+      const calendarDaysEl = document.getElementById('calendarDays');
+      const calPrevBtn = document.getElementById('calPrev');
+      const calNextBtn = document.getElementById('calNext');
+      // "All" is the aggregate pill; A–F (and G once uploaded) are the mini
+      // pose thumbnails — both act as filters, so both are wired the same way.
+      let filterButtons = Array.from(document.querySelectorAll('.calendar__filter-btn--all, .calendar__filter-thumb'));
+
+      let calendarViewDate = new Date();
+      let calendarFilter = 'ALL';
+
+      function wireFilterButton(btn) {
+        filterButtons.push(btn);
+        btn.addEventListener('click', () => {
+          filterButtons.forEach((b) => b.classList.remove('is-selected'));
+          btn.classList.add('is-selected');
+          calendarFilter = btn.dataset.filter;
+          renderCalendar();
+        });
+      }
+
+      function renderCalendar() {
+        const data = loadProgress();
+        const year = calendarViewDate.getFullYear();
+        const month = calendarViewDate.getMonth();
+
+        calMonthLabel.textContent = calendarViewDate.toLocaleDateString(undefined, {
+          month: 'long',
+          year: 'numeric',
+        });
+
+        calendarDaysEl.innerHTML = '';
+
+        const firstWeekday = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+
+        for (let i = 0; i < firstWeekday; i++) {
+          const blank = document.createElement('div');
+          blank.className = 'calendar__day calendar__day--empty';
+          calendarDaysEl.appendChild(blank);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const cellDate = new Date(year, month, day);
+          const key = dateKey(cellDate);
+          const completed = data[key] || [];
+          const toShow = calendarFilter === 'ALL'
+            ? completed
+            : completed.filter((p) => p === calendarFilter);
+
+          const cell = document.createElement('div');
+          cell.className = 'calendar__day';
+          if (
+            cellDate.getFullYear() === today.getFullYear() &&
+            cellDate.getMonth() === today.getMonth() &&
+            cellDate.getDate() === today.getDate()
+          ) {
+            cell.classList.add('is-today');
+          }
+
+          const num = document.createElement('span');
+          num.className = 'calendar__day-num';
+          num.textContent = String(day);
+          cell.appendChild(num);
+
+          if (toShow.length) {
+            cell.classList.add('has-check');
+            const badges = document.createElement('div');
+            badges.className = 'calendar__badges';
+            toShow.forEach((letter) => {
+              const badge = document.createElement('span');
+              badge.className = 'calendar__badge';
+              badge.textContent = calendarFilter === 'ALL' ? `✓${letter}` : '✓';
+              badges.appendChild(badge);
+            });
+            cell.appendChild(badges);
+          }
+
+          calendarDaysEl.appendChild(cell);
+        }
+      }
+
+      calPrevBtn.addEventListener('click', () => {
+        calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() - 1, 1);
+        renderCalendar();
+      });
+
+      calNextBtn.addEventListener('click', () => {
+        calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth() + 1, 1);
+        renderCalendar();
+      });
+
+      // The initial filterButtons array was just built by querying the DOM
+      // (not pushed via wireFilterButton), so wire each one up individually
+      // without double-registering them.
+      filterButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          filterButtons.forEach((b) => b.classList.remove('is-selected'));
+          btn.classList.add('is-selected');
+          calendarFilter = btn.dataset.filter;
+          renderCalendar();
+        });
+      });
+
+      renderCalendar();
     })();
   </script>
 
